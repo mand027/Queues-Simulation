@@ -33,7 +33,6 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <chrono>
 #include <iostream>
-#include <fstream>
 #include "cHandler.hpp"
 
 using namespace std;
@@ -54,7 +53,7 @@ void init() // FOR GLUT LOOP
 {
     // El archivo txt debe de tener 4 líneas: El no. de servers, el no. de clientes, el no. límite de clientes (si no hay, 0) y el average time.
     // EN ESE ORDEN.
-    ifstream inFile ("datos.txt");
+    FILE *fp = fopen("datos.txt", "r");
     
     // [0] = No. Servers
     // [1] = No. Clients
@@ -63,20 +62,16 @@ void init() // FOR GLUT LOOP
     // Average Time
     float aux2 = 0;
     
-    if (inFile.is_open()) {
-        for (int i = 0; i < 4; i++) {
-            if ( i == 3 )
-                inFile >> aux2;
-            else
-                inFile >> aux1[i];
-        }
-        inFile.close();
+
+    for (int i = 0; i < 4; i++) {
+        if ( i == 3 )
+            fscanf(fp, "%f", &aux2);
+        else
+            fscanf(fp, "%d", &aux1[i]);
     }
-    else {
-        cout << "Unable to open file wooo\n";
-        exit(1);
-    }
+    fclose(fp);
     
+    printf("Servers: %d, Clients: %d, AvgT: %f, LimitCl: %d", aux1[0], aux1[1], aux2, aux1[2]);
     // (No. Servers, No. Clients, Average Time, Limit Clients)
     handler = new cHandler(aux1[0], aux1[1], aux2, aux1[2]);
     
@@ -185,7 +180,7 @@ int main(int argc, char* argv[])
     glutInit(&argc, argv);                                           // Init GLUT with command line parameters.
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB);        // Use 2 buffers (hidden and visible). Use the depth buffer. Use 3 color channels.
     glutInitWindowSize(1000, 800);
-    glutCreateWindow("CG first program");
+    glutCreateWindow("Queues Simulation");
     
     init();
     glutReshapeFunc(reshape);                                        // Reshape CALLBACK function.
