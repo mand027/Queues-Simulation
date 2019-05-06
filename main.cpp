@@ -53,7 +53,7 @@ void init() // FOR GLUT LOOP
 {
     // El archivo txt debe de tener 4 líneas: El no. de servers, el no. de clientes, el no. límite de clientes (si no hay, 0) y el average time.
     // EN ESE ORDEN.
-    FILE *fp = fopen("datos.txt", "r");
+    FILE *fp = fopen("/Users/luisbrime/Documents/Tec/8 Semestre/Métodos/Segundo Proyecto/Queues-Simulation/datos.txt", "r");
     
     // [0] = No. Servers
     // [1] = No. Clients
