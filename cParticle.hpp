@@ -19,7 +19,7 @@
 #include "freeglut.h"
 #endif
 #ifdef __unix__
-// For Linux users only: g++ CG_Demo.cpp -lglut -lGL -o CG_Demo
+// ***For Linux users only: g++ CG_Demo.cpp -lglut -lGL -o CG_Demo
 // ./CG_Demo
 // Reference: https://www.linuxjournal.com/content/introduction-opengl-programming
 #include "GL/freeglut.h"
@@ -59,6 +59,7 @@ public:
     GLfloat* ks;    
     GLfloat* alpha;
     
+    cParticle();
     cParticle(float* p, bool serv);
     ~cParticle();
     void MoveToServer(float* where);

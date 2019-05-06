@@ -33,20 +33,12 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <chrono>
 #include <iostream>
-#include "cParticle.hpp"
+#include <fstream>
+#include "cHandler.hpp"
 
-const int howManyServer = 5;
-const int howManyClients = 100;
-const float averageTime = 5;  //seconds
-const int clientLimit = 75;
-bool canI = true;
-int globalCount = 0;
-std::list <cParticle> clients;
+using namespace std;
 
-cParticle* p;
-cParticle* Clients[howManyClients];
-cParticle* Servers[howManyServer];
-int half = 1;
+cHandler* handler;
 
 GLfloat* ka;
 GLfloat* kd;
@@ -60,6 +52,33 @@ GLfloat* Is;
 
 void init() // FOR GLUT LOOP
 {
+    // El archivo txt debe de tener 4 líneas: El no. de servers, el no. de clientes, el no. límite de clientes (si no hay, 0) y el average time.
+    // EN ESE ORDEN.
+    ifstream inFile ("datos.txt");
+    
+    // [0] = No. Servers
+    // [1] = No. Clients
+    // [2] = Limit Clients
+    int aux1[3];
+    // Average Time
+    float aux2 = 0;
+    
+    if (inFile.is_open()) {
+        for (int i = 0; i < 4; i++) {
+            if ( i == 3 )
+                inFile >> aux2;
+            else
+                inFile >> aux1[i];
+        }
+        inFile.close();
+    }
+    else {
+        cout << "Unable to open file wooo\n";
+        exit(1);
+    }
+    
+    // (No. Servers, No. Clients, Average Time, Limit Clients)
+    handler = new cHandler(aux1[0], aux1[1], aux2, aux1[2]);
     
     //material plane
     ka = new GLfloat[4];
@@ -82,44 +101,6 @@ void init() // FOR GLUT LOOP
     
     alpha = new GLfloat[1];
     alpha[0] = 50.0f;
-    
-    //clients
-    float* pos = new float[3];
-    pos[0] = 0;
-    pos[1] = 0;
-    pos[2] = 0;
-    
-    for(int i = 0; i < howManyClients; i++)
-    {
-        pos[0] = i;
-        bool serv = false;
-        p = new cParticle(pos, serv);  // position, mass, radius
-        Clients[i] = p;
-    }
-    
-    //servers
-    pos[0] = -2;
-    pos[1] = 0;
-    pos[2] = 0;
-    
-    if(howManyServer>2)
-    {
-        half = howManyServer/2;
-    }
-    else
-    {
-        half = 1;
-    }
-    for(int j = 0; j < howManyServer; j++)
-    {
-        pos[1] = j - half;
-        bool serv = false;
-        p = new cParticle(pos, serv);  // position, mass, radius
-        p->ka[0] = 0.0f;
-        p->ka[1] = 1.0f;
-        p->ka[2] = 0.0f;
-        Servers[j] = p;
-    }
     
     //light begins
     L0pos = new GLfloat[4];
@@ -174,14 +155,7 @@ void display()                                                       // Called f
     glVertex3f(-15.0f, -15.5f, 15.0f);    // Bottom Left
     glEnd();
     
-    for(int i = 0; i < howManyClients; i++)
-    {
-        Clients[i]->Draw();
-    }
-    for(int i = 0; i < howManyServer; i++)
-    {
-        Servers[i]->Draw();
-    }
+    handler->draw();
     
     glutSwapBuffers();                                               // Swap the hidden and visible buffers.
 }
@@ -201,48 +175,8 @@ void reshape(int x, int y)                                           // Called w
 
 void idle()                                                          // Called when drawing is finished.
 {
-    if(canI){
-        for (int i=0; i<howManyServer; i++) {
-            if(Servers[i]->serving == false && canI){
-                if(globalCount>=clientLimit){
-                    canI = false;
-                    break;
-                }
-                Clients[globalCount]->MoveToServer(Servers[i]->position);
-                Servers[i]->serving = true;
-               
-                if(globalCount<=clientLimit)
-                {
-                    globalCount++;
-                }
-                
-                for (int j = globalCount; j < howManyClients; j++) {
-                    Clients[j]->position[0] -= 1;
-                }
-            }
-        }
-        
-        for (int i = 0; i<globalCount; i++) {
-            if(Clients[i]->timeServing >= averageTime)
-            {
-                for (int j = 0; j < howManyServer; j++) {
-                    if (Clients[i]->position[1] == Servers[j]->position[1])
-                    {
-                        Servers[j]->serving = false;
-                        
-                    }
-                }
-                float nu[3];
-                nu[0] = 99.0f;
-                nu[1] = 99.0f;
-                nu[2] = 99.0f;
-                Clients[i]->MoveToServer(nu);
-            }
-            else {
-                Clients[i]->timeServing += 0.5;
-            }
-        }
-    }
+    handler->update();
+    
     glutPostRedisplay();                                             // Display again.
 }
 
@@ -260,4 +194,3 @@ int main(int argc, char* argv[])
     glutMainLoop();                                                  // Begin graphics program.
     return 0;                                                        // ANSI C requires a return value.
 }
-

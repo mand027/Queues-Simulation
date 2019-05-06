@@ -11,6 +11,11 @@
 cParticle::~cParticle()
 {
 }
+
+cParticle::cParticle() {
+    
+}
+
 cParticle::cParticle(float* pos, bool serv)
 {
     float minKd = 0.3f;
